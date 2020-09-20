@@ -1,0 +1,106 @@
+Olymp Trade testing  var win = 'o';
+var data = 'xoxoxoxoxoxoxooox';
+var wins = 0;
+var loses = 0;
+for (var i = 0; i < data.length; i++) {
+	if (data[i] == win) {
+		wins++;
+	}
+	else {
+		loses++;
+		win = win == 'x' ? 'o' : 'x';
+	}
+}
+console.log('Wins: ', wins);
+console.log('Loses: ', loses);
+
+=========
+
+var win = 'o';
+var data = 'xooxooooooooxoxxxxxxoooxoooooxoooxxxxxooxxxxooxoxxoxoxoxooxoxxxoxxxooxxxoooxxxooxoxxxooxoxxxoooxxoxxoxooooxoooxxxxoxxooxoxxxoxooxxoxoooxx';
+var wins = 0;
+var loses = 0;
+for (var i = 0; i < data.length; i++) {
+	if (data[i] == win) {
+		wins++;
+		if (data[i] == data[i-1] == data[i-2]) {
+			win = win == 'x' ? 'o' : 'x';
+		}
+	}
+	else {
+		loses++;
+		win = win == 'x' ? 'o' : 'x';
+	}
+
+}
+console.log('Wins: ', wins);
+console.log('Loses: ', loses);
+
+
+=========
+
+var win = 'o';
+var data = 'xooxooooooooxoxxxxxxoooxoooooxoooxxxxxooxxxxooxoxxoxoxoxooxoxxxoxxxooxxxoooxxxooxoxxxooxoxxxoooxxoxxoxooooxoooxxxxoxxooxoxxxoxooxxoxoooxx';
+var wins = 0;
+var loses = 0;
+for (var i = 0; i < data.length; i++) {
+	if (data[i] == win) {
+		wins++;
+		if (i > 1 && data[i] == data[i-1] && data[i] == data[i-2]) {
+			win = win == 'x' ? 'o' : 'x';
+		}
+	}
+	else {
+		loses++;
+		win = win == 'x' ? 'o' : 'x';
+	}
+	if ((0.82*wins - loses) > 1) break;
+}
+console.log('Wins: ', wins);
+console.log('Loses: ', loses);
+
+=====
+
+var tradeIntervalId = setInterval(function() {
+	var ms = new Date().getMilliseconds();
+	if (10 > ms && ms > 0) {
+		console.log('timing sec', 61 - new Date().getSeconds() );
+	}
+}, 1);
+
+======
+var tables = document.getElementsByClassName('user-deals-table__body’); // length might be 1 or 2
+var $row = $('tbody.user-deals-table__body tr’);
+
+var $profitAllCells = document.querySelectorAll('tbody.user-deals-table__body tr td.user-deals-table__cell_profit span.user-deals-table__cell-content span’);
+var $profitFirstCell = $('tbody.user-deals-table__body tr td.user-deals-table__cell_profit span.user-deals-table__cell-content span');
+var profitLatest = $profitFirstCell.className; // "-win “, "-loose " and "-standoff "
+
+var $tradeAllCells = document.querySelectorAll('tbody.user-deals-table__body tr td.user-deals-table__cell_trade span.user-deals-table__cell-content span.sprite');
+var $tradeFirstCell = $('tbody.user-deals-table__body tr td.user-deals-table__cell_trade span.user-deals-table__cell-content span.sprite');
+var tradeLatest = $tradeFirstCell.className; // "sprite icon-up" or "sprite icon-down"
+
+var $idAllCells = document.querySelectorAll('tbody.user-deals-table__body tr td.user-deals-table__cell_id span’);
+var $idFirstCell = $('tbody.user-deals-table__body tr td.user-deals-table__cell_id span’);
+var idLatest = $tradeFirstCell.innerText;
+
+======
+
+var tradeIntervalId = setInterval(function() {
+	var ms = new Date().getMilliseconds();
+	if (10 > ms && ms > 0) {
+		var $idFirstCell = $('tbody.user-deals-table__body tr td.user-deals-table__cell_id span’);
+		var idLatest = $tradeFirstCell.innerText;
+
+		var $tradeFirstCell = $('tbody.user-deals-table__body tr td.user-deals-table__cell_trade span.user-deals-table__cell-content span.sprite');
+		var tradeLatest = $tradeFirstCell.className; // "sprite icon-up" or "sprite icon-down"
+
+		var $profitFirstCell = $('tbody.user-deals-table__body tr td.user-deals-table__cell_profit span.user-deals-table__cell-content span');
+		var profitLatest = $profitFirstCell.className; // "-win “, "-loose " and "-standoff "
+
+		console.log(‘’)
+
+		var currentTime = new Date();
+		console.log(‘Time countdown… ’, 61 - currentTime.getSeconds(), ‘ sec ’, 1 - currentTime.getMilliseconds(), ‘ ms’);
+	}
+}, 1);
