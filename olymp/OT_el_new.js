@@ -42,6 +42,23 @@ function scanChart() {
     }
 }
 
+// #########
+
+const $INPUT_DEAL_AMOUNT = document.querySelector('.input-with-step input')
+var _keyEvent = '__reactEventHandlers';
+for (var key of Object.keys($INPUT_DEAL_AMOUNT)) {
+    _keyEvent = key.includes(_keyEvent) ? key : _keyEvent;
+}
+const _eventDealAmount = $INPUT_DEAL_AMOUNT[_keyEvent];
+if (!_eventDealAmount) alert('Missing _eventDealAmount');
+
+function changeDealAmount(value) {
+    _eventDealAmount.value = String(value);
+    _eventDealAmount.onChange({ target: _eventDealAmount });
+}
+
+// #########
+
 function trade(direction, isWin) {
     if (isWin)
         console.log('RESET bet amount!!!');
