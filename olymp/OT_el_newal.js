@@ -120,6 +120,36 @@ function trade(direction, isWin) {
   console.log("Make a trade order!!!");
 }
 
+function Trade() {
+  /** Initialization */
+  const $BUTTON_DEAL_UP = document.querySelector(".deal-button_up"),
+    $BUTTON_DEAL_DOWN = document.querySelector(".deal-button_down"),
+    $INPUT_DEAL_AMOUNT = document.querySelector(".input-with-step input");
+  var _keyEvent = "__reactEventHandlers";
+  for (var key of Object.keys($INPUT_DEAL_AMOUNT)) {
+    _keyEvent = key.includes(_keyEvent) ? key : _keyEvent;
+  }
+  const _eventDealAmount = $INPUT_DEAL_AMOUNT[_keyEvent];
+  if (!_eventDealAmount) alert("Missing _eventDealAmount");
+
+  const changeDealAmount = (Trade.changeDealAmount = function (value) {
+    if (!value) return false;
+    _eventDealAmount.value = String(value);
+    _eventDealAmount.onChange({ target: _eventDealAmount });
+    return _eventDealAmount.value === String(value) ? true : false;
+  });
+
+  const dealUp = (Trade.dealUp = function (value) {
+    changeDealAmount(value);
+    $BUTTON_DEAL_UP.click();
+  });
+
+  const dealDown = (Trade.dealDown = function (value) {
+    changeDealAmount(value);
+    $BUTTON_DEAL_DOWN.click();
+  });
+}
+
 // #########
 
 function Market(initConfig) {
@@ -137,42 +167,44 @@ function Market(initConfig) {
     return this;
   };
 
-  const candles = Market.candles = function (numCandles) {
-    var
-    $candlesPath = document.querySelectorAll(".main-chart.main-chart_candle")[0].getElementsByTagName("path")[2],
-    data = $candlesPath.getAttribute("d").split(/ZM|[ZM]/).filter(Boolean),
-    index = numCandles ? data.length - numCandles : 0,
-    candlesChart = [];
+  const candles = (Market.candles = function (numCandles) {
+    var $candlesPath = document
+        .querySelectorAll(".main-chart.main-chart_candle")[0]
+        .getElementsByTagName("path")[2],
+      data = $candlesPath
+        .getAttribute("d")
+        .split(/ZM|[ZM]/)
+        .filter(Boolean),
+      index = numCandles ? data.length - numCandles : 0,
+      candlesChart = [];
 
     for (var i = index; i < data.length; i++) {
-      const
-      cords = data[i].split("L"),
-      Y1 = parseFloat(cords[1].split(",")[1]),
-      Y2 = parseFloat(cords[2].split(",")[1]),
-      YDelta = Math.abs(Y2 - Y1);
+      const cords = data[i].split("L"),
+        Y1 = parseFloat(cords[1].split(",")[1]),
+        Y2 = parseFloat(cords[2].split(",")[1]),
+        YDelta = Math.abs(Y2 - Y1);
 
-      YDelta > 1 ?
-        candlesChart.push("up") :
-        YDelta === 1 ?
-          candlesChart.push("standoff") :
-          candlesChart.push("down");
+      YDelta > 1
+        ? candlesChart.push("up")
+        : YDelta === 1
+        ? candlesChart.push("standoff")
+        : candlesChart.push("down");
     }
 
     return candlesChart;
-  };
+  });
 
-  const dealActive = Market.dealActive = function () {
+  const dealActive = (Market.dealActive = function () {
     const deal = document.querySelector(".deal-card");
     if (!deal || !deal.hasAttribute("data-id")) return {};
 
-    const
-    dealId = deal.attributes["data-id"].value,
-    $returnRate = deal.querySelector(".deal-card-title__subtitle span"),
-    $betDownDirection = deal.querySelector(".deal-card-amount__pic_down"),
-    $betAmount = deal.querySelector(".deal-card-amount__value"),
-    $statusWin = deal.querySelector(".colored-amount_win"),
-    $statusLose = deal.querySelector(".colored-amount_loose"),
-    profitText = deal.querySelector(".colored-amount span").innerText;
+    const dealId = deal.attributes["data-id"].value,
+      $returnRate = deal.querySelector(".deal-card-title__subtitle span"),
+      $betDownDirection = deal.querySelector(".deal-card-amount__pic_down"),
+      $betAmount = deal.querySelector(".deal-card-amount__value"),
+      $statusWin = deal.querySelector(".colored-amount_win"),
+      $statusLose = deal.querySelector(".colored-amount_loose"),
+      profitText = deal.querySelector(".colored-amount span").innerText;
 
     return {
       id: dealId,
@@ -182,19 +214,19 @@ function Market(initConfig) {
       status: $statusWin ? "win" : $statusLose ? "lose" : "draw",
       profit: parseFloat(profitText[0] + profitText.match(/[.\d]*$/)[0])
     };
-  };
+  });
 
-  const dealHistory = Market.dealHistory = function() {
+  const dealHistory = (Market.dealHistory = function () {
     const deal = document.querySelector(".card_history");
     if (!deal || !deal.hasAttribute("data-id")) return {};
 
     const dealId = deal.attributes["data-id"].value,
-    $percentReturnRate = deal.querySelector(".card__subtitle-winperc"),
-    $betDownDirection = deal.querySelector(".icon-trade-dir_down"),
-    $betAmount = deal.querySelector(".card__amount-sum__text span"),
-    $statusWin = deal.querySelector(".colored-amount_win"),
-    $statusLose = deal.querySelector(".colored-amount_loose"),
-    profitText = deal.querySelector(".colored-amount span").innerText;
+      $percentReturnRate = deal.querySelector(".card__subtitle-winperc"),
+      $betDownDirection = deal.querySelector(".icon-trade-dir_down"),
+      $betAmount = deal.querySelector(".card__amount-sum__text span"),
+      $statusWin = deal.querySelector(".colored-amount_win"),
+      $statusLose = deal.querySelector(".colored-amount_loose"),
+      profitText = deal.querySelector(".colored-amount span").innerText;
 
     return {
       id: dealId,
@@ -205,15 +237,17 @@ function Market(initConfig) {
       status: $statusWin ? "win" : $statusLose ? "lose" : "draw",
       profit: parseFloat(profitText[0] + profitText.match(/[.\d]*$/)[0])
     };
-  }
+  });
 
-  const update = Market.update = function () {
+  const update = (Market.update = function () {
     const activeDeal = dealActive();
     data.candles = candles(config.candles);
     data.dealActive = activeDeal;
-    data.lastDealActiveId = activeDeal.id ? activeDeal.id : data.lastDealActiveId;
+    data.lastDealActiveId = activeDeal.id
+      ? activeDeal.id
+      : data.lastDealActiveId;
     data.dealHistory = dealHistory();
-  };
+  });
 
   update();
   return data;
