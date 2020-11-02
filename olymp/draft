@@ -1,0 +1,23 @@
+once = false;
+if (A && B && !once) {
+	once = true;
+	// do sth
+}
+else if (!A && !B) {
+	once = false;
+	// do sth else
+}
+
+Array.prototype.allEqual = function(value) {
+	if (this.length <= 0) return false;
+	for (var i = 0; i < this.length; i++)
+		if (this[i] !== value) return false;
+	return false;
+}
+
+if (allTrue([]) && !once) {
+	once = true;
+}
+else (allFalse()) {
+	once = false;
+}
