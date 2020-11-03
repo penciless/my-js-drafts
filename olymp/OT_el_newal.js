@@ -104,20 +104,14 @@ function updateActiveDeals() {
 }
 
 // #########
+Array.prototype.everyEqual = function (value) {
+  if (this.length <= 0) return false;
+  for (var i = 0; i < this.length; i++) if (this[i] !== value) return false;
+  return false;
+};
 
-function trade(direction, isWin) {
-  if (isWin) console.log("RESET bet amount!!!");
-  else console.log("INCREASE bet amount!!!");
-
-  if (direction === "up") {
-    console.log("Make an UP trade");
-    document.querySelector(".deal-button_up").click();
-  } else {
-    console.log("Make an down trade");
-    document.querySelector(".deal-button_down").click();
-  }
-
-  console.log("Make a trade order!!!");
+function Bot(direction, isWin) {
+  this.condition = function () {};
 }
 
 function Trade() {
