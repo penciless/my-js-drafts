@@ -104,14 +104,39 @@ function updateActiveDeals() {
 }
 
 // #########
-Array.prototype.everyEqual = function (value) {
+Array.prototype.everyEqual = function(value) {
   if (this.length <= 0) return false;
   for (var i = 0; i < this.length; i++) if (this[i] !== value) return false;
   return false;
 };
 
-function Bot(direction, isWin) {
-  this.condition = function () {};
+function Bot() {
+  this.condition = function(array) {
+    return array.everyEqual(true);
+  };
+
+  this.trade = function() {
+    // strategy
+  };
+
+  this.run = function() {
+    this._intervalID = setInterval
+    if (this.condition()) this.trade();
+  }
+}
+
+function Account() {
+  this.reset = function () {
+    return 0;
+  };
+
+  this.balance = function () {
+    return 0;
+  };
+
+  this.profit = function () {
+    return 0;
+  };
 }
 
 function Trade() {
