@@ -104,38 +104,63 @@ function updateActiveDeals() {
 }
 
 // #########
-Array.prototype.everyEqual = function(value) {
+Array.prototype.everyEqual = function (value) {
   if (this.length <= 0) return false;
   for (var i = 0; i < this.length; i++) if (this[i] !== value) return false;
   return false;
 };
 
-function Bot() {
-  this.condition = function(array) {
-    return array.everyEqual(true);
+function Bot(tradeConditions, tradeFunction) {
+  var _intervalID = null;
+  var _conditions = tradeConditions || [];
+  var _tradeFunc =
+    tradeFunction && tradeFunction.constructor === Function
+      ? tradeFunction
+      : function func() {};
+  var _once = false;
+
+  this.condition = function () {
+    const meetConditions = _conditions.everyEqual(true);
+    if (meetConditions && !_once) {
+      return (_once = true);
+    } else if (!meetConditions) {
+      return (_once = false);
+    }
+    return false;
   };
 
-  this.trade = function() {
-    // strategy
+  this.trade = function () {
+    try {
+      _tradeFunc();
+    } catch {
+      // handle unsuccessful making deal
+    }
   };
 
-  this.run = function() {
-    this._intervalID = setInterval
-    if (this.condition()) this.trade();
-  }
+  this.run = function () {
+    _intervalID = setInterval(function () {
+      if (this.condition()) this.trade();
+    }, 0);
+  };
+
+  this.stop = function () {
+    clearInterval(_intervalID);
+  };
 }
 
 function Account() {
+  var _initBalance = this.balance();
   this.reset = function () {
-    return 0;
+    _initBalance = this.balance();
   };
 
   this.balance = function () {
+    // TODO logic to get current balance
     return 0;
   };
 
   this.profit = function () {
-    return 0;
+    return this.balance() - _initBalance;
   };
 }
 
