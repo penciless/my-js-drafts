@@ -106,11 +106,18 @@ function updateActiveDeals() {
 // #########
 Array.prototype.everyEqual = function (value) {
   if (this.length <= 0) return false;
-  for (var i = 0; i < this.length; i++) if (this[i] !== value) return false;
-  return false;
+  for (var i = 0; i < this.length; i++) {
+    const element = this[i];
+    if (element && element.constructor === Function) {
+      if (element() !== value) return false;
+    }
+    else if (element !== value) return false;
+  }
+  return true;
 };
 
 function Bot(tradeConditions, tradeFunction) {
+  const _this = this;
   var _intervalID = null;
   var _conditions = tradeConditions || [];
   var _tradeFunc =
@@ -134,19 +141,35 @@ function Bot(tradeConditions, tradeFunction) {
       _tradeFunc();
     } catch {
       // handle unsuccessful making deal
+      console.log("Making deal is unsuccessful!!!");
     }
   };
 
   this.run = function () {
     _intervalID = setInterval(function () {
-      if (this.condition()) this.trade();
+      if (_this.condition()) _this.trade();
     }, 0);
   };
 
   this.stop = function () {
     clearInterval(_intervalID);
   };
+
+  this.forceStop = function () {
+    clearInterval(_intervalID);
+  };
 }
+
+var abc = new Bot([
+    function() { return new Date().getSeconds() % 5 === 0; }
+  ],
+  function() {
+    console.log("do trade");
+  });
+
+abc.run();
+
+// ###############
 
 function Account() {
   var _initBalance = this.balance();
