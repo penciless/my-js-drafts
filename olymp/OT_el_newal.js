@@ -162,9 +162,18 @@ function Bot(tradeConditions, tradeFunction) {
 
 var abc = new Bot([
     function() { return new Date().getSeconds() % 5 === 0; }
+    // condition 1: near second 0 moment
+    // condition 2: match pattern 
+    // condition 3: no currently active deal
+    // condition 4: last trade win (profit > 0)
   ],
   function() {
     console.log("do trade");
+    // if last trade not win:
+    //   amount = loss * 2
+    //   makeNewDeal(amount)
+    // else if last trade win:
+    //   do nothing, wait for the next pattern matching
   });
 
 abc.run();
