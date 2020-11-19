@@ -1,5 +1,3 @@
-// ###############
-
 function Account() {
   var _initBalance = this.balance();
   this.reset = function () {
@@ -15,6 +13,8 @@ function Account() {
     return this.balance() - _initBalance;
   };
 }
+
+// #########
 
 function Trade() {
   /** Initialization */
@@ -149,11 +149,6 @@ function Market(initConfig) {
   return data;
 }
 
-new Market({ candles: 4 });
-Market.config.candles(4);
-Market.update();
-Market.data();
-
 // ###############
 
 Array.prototype.everyEqual = function (value, context) {
@@ -161,29 +156,35 @@ Array.prototype.everyEqual = function (value, context) {
     const element = this[i];
     if (element && element.constructor === Function) {
       if (element(context) !== value) return false;
-    }
-    else if (element !== value) return false;
+    } else if (element !== value) return false;
   }
   return this.length ? true : false;
 };
 
 function Bot(initialization) {
   const _this = this;
-  var
-  _once = false,
-  _context = {},
-  _intervalID = null,
-  _conditions = [],
-  _tradeFunc = function () {};
+  var _once = false,
+    _context = {},
+    _intervalID = null,
+    _conditions = [],
+    _tradeFunc = function () {};
+
+  _context.bot = this;
 
   if (initialization && initialization.constructor === Function)
-    initialization(_context);
+    try {
+      initialization(_context);
+    } catch (error) {
+      console.log("Failed to initialize the bot! Error:", error);
+      return;
+    }
 
   this.run = function (tradeConditions, tradeFunction) {
-    _conditions = tradeConditions || [],
-    _tradeFunc =
-      tradeFunction && tradeFunction.constructor === Function
-        ? tradeFunction : function func() {};
+    (_conditions = tradeConditions || []),
+      (_tradeFunc =
+        tradeFunction && tradeFunction.constructor === Function
+          ? tradeFunction
+          : function func() {});
     _this.resume();
   };
 
@@ -207,10 +208,9 @@ function Bot(initialization) {
   this.trade = function () {
     try {
       _tradeFunc(_context);
-    }
-    catch(error) {
+    } catch (error) {
       // handle unsuccessful making deal
-      console.log("Making deal is unsuccessful!!! Error:", error);
+      console.log("Failed to make a deal! Error:", error);
     }
   };
 
@@ -225,27 +225,35 @@ function Bot(initialization) {
   };
 }
 
-var abc = new Bot(function(context) {
-  context.hour = new Date().getHours();
+var abc = new Bot(function (context) {
+  context.market = new Market({ candles: 4 });
+  context.trade = new Trade();
+  context.account = new Account();
+  // Market.data();
 });
 
-abc.run([
-  // condition 1: nearly second 0 moment
-  function(context) {
-    if (new Date().getSeconds() % 15 === 0)
-      console.log('%15:', context.hour);
-    return new Date().getSeconds() % 5 === 0;
-  },
-  // condition 2: match pattern 
-  // condition 3: no currently active deal
-  // condition 4: last trade win (profit > 0)
-],
-function(context) {
-  console.log('hour:', context.hour);
-  console.log('do trade');
-  // if last trade not win:
-  //   amount = loss * 2
-  //   makeNewDeal(amount)
-  // else if last trade win:
-  //   do nothing, wait for the next pattern matching
-});
+abc.run(
+  [
+    // condition 0: repeat continuously
+    function (context) {
+      context.market.update();
+    },
+    // condition 1: nearly second 0 moment
+    function (context) {
+      if (new Date().getSeconds() % 15 === 0) console.log("%15:", context.hour);
+      return new Date().getSeconds() % 5 === 0;
+    }
+    // condition 2: match pattern
+    // condition 3: no currently active deal
+    // condition 4: last trade win (profit > 0)
+  ],
+  function (context) {
+    console.log("hour:", context.hour);
+    console.log("do trade");
+    // if last trade not win:
+    //   amount = loss * 2
+    //   makeNewDeal(amount)
+    // else if last trade win:
+    //   do nothing, wait for the next pattern matching
+  }
+);
