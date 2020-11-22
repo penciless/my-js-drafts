@@ -233,6 +233,7 @@ var abc = new Bot(function (context) {
   context.market = new Market({ candles: 4 });
   context.trade = new Trade();
   context.account = new Account();
+  localStorage.setItem('Bot_Init_Time', Date.now());
   // Market.data();
 });
 
@@ -252,13 +253,22 @@ abc.run(
     // condition 4: last trade win (profit > 0)
   ],
   function (context) {
-    console.log("do trade");
+    console.log('##############################');
     // console.log("context", context);
     const data = Market.data();
-    console.log("data", data);
     const direction = data.candles.pop();
-    if (direction === "up") Trade.dealUp();
-    if (direction === "down") Trade.dealDown();
+    if (direction === 'up') {
+      Trade.dealUp();
+      console.log('Trade UP!');
+    }
+    else if (direction === 'down') {
+      Trade.dealDown();
+      console.log('Trade DOWN!');
+    }
+    else console.log('Cannot decide direction!');
+    console.log('Time:', Date.now());
+    localStorage.setItem('Bot_Last_Time', Date.now());
+    console.log('Market:', data);
     // if last trade not win:
     //   amount = loss * 2
     //   makeNewDeal(amount)
