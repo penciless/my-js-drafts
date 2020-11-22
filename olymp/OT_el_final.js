@@ -1,5 +1,6 @@
 function Account() {
-  var _initBalance = this.balance();
+  var _initBalance = 0;
+
   this.reset = function () {
     _initBalance = this.balance();
   };
@@ -12,6 +13,8 @@ function Account() {
   this.profit = function () {
     return this.balance() - _initBalance;
   };
+
+  _initBalance = this.balance();
 }
 
 // #########
@@ -95,12 +98,14 @@ function Market(initConfig) {
     if (!deal || !deal.hasAttribute("data-id")) return {};
 
     const dealId = deal.attributes["data-id"].value,
-      $returnRate = deal.querySelector(".deal-card-title__subtitle span"),
+      $returnRate = deal.querySelector(".deal-card-subtitle span"),
       $betDownDirection = deal.querySelector(".deal-card-amount__pic_down"),
       $betAmount = deal.querySelector(".deal-card-amount__value"),
       $statusWin = deal.querySelector(".colored-amount_win"),
       $statusLose = deal.querySelector(".colored-amount_loose"),
       profitText = deal.querySelector(".colored-amount span").innerText;
+
+    if (!$returnRate) return {};
 
     return {
       id: dealId,
@@ -179,23 +184,7 @@ function Bot(initialization) {
       return;
     }
 
-  this.run = function (tradeConditions, tradeFunction) {
-    (_conditions = tradeConditions || []),
-      (_tradeFunc =
-        tradeFunction && tradeFunction.constructor === Function
-          ? tradeFunction
-          : function func() {});
-    _this.resume();
-  };
-
-  this.resume = function () {
-    if (_intervalID) return;
-    _intervalID = setInterval(function () {
-      if (_this.condition()) _this.trade();
-    }, 0);
-  };
-
-  this.condition = function () {
+  const _conditionFunc = function () {
     const meetConditions = _conditions.everyEqual(true, _context);
     if (meetConditions && !_once) {
       return (_once = true);
@@ -205,13 +194,26 @@ function Bot(initialization) {
     return false;
   };
 
-  this.trade = function () {
-    try {
-      _tradeFunc(_context);
-    } catch (error) {
-      // handle unsuccessful making deal
-      console.log("Failed to make a deal! Error:", error);
-    }
+  this.run = function (tradeConditions, tradeFunction) {
+    _conditions = tradeConditions || [];
+    _tradeFunc =
+        tradeFunction && tradeFunction.constructor === Function
+        ? tradeFunction : function func() {};
+    _this.resume();
+  };
+
+  this.resume = function () {
+    if (_intervalID) return;
+    _intervalID = setInterval(function () {
+      try {
+        if (_conditionFunc()) _tradeFunc(_context);
+      }
+      catch (error) {
+        console.log("Bot runs into error! Force stop!");
+        _this.forceStop();
+        throw error;
+      }
+    }, 0);
   };
 
   this.stop = function () {
@@ -225,6 +227,8 @@ function Bot(initialization) {
   };
 }
 
+/// ####
+
 var abc = new Bot(function (context) {
   context.market = new Market({ candles: 4 });
   context.trade = new Trade();
@@ -236,20 +240,25 @@ abc.run(
   [
     // condition 0: repeat continuously
     function (context) {
-      context.market.update();
+      Market.update();
+      return true;
     },
     // condition 1: nearly second 0 moment
     function (context) {
-      if (new Date().getSeconds() % 15 === 0) console.log("%15:", context.hour);
-      return new Date().getSeconds() % 5 === 0;
+      return new Date().getSeconds() === 0;
     }
     // condition 2: match pattern
     // condition 3: no currently active deal
     // condition 4: last trade win (profit > 0)
   ],
   function (context) {
-    console.log("hour:", context.hour);
     console.log("do trade");
+    // console.log("context", context);
+    const data = Market.data();
+    console.log("data", data);
+    const direction = data.candles.pop();
+    if (direction === "up") Trade.dealUp();
+    if (direction === "down") Trade.dealDown();
     // if last trade not win:
     //   amount = loss * 2
     //   makeNewDeal(amount)
