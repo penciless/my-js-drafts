@@ -269,6 +269,10 @@ abc.run(
     console.log('Time:', Date.now());
     localStorage.setItem('Bot_Last_Time', Date.now());
     console.log('Market:', data);
+    setTimeout(function() {
+      document.querySelector('button.btn-to-right').click();
+    }, 1000);
+    // document.querySelector('button.btn-to-right').click();
     // if last trade not win:
     //   amount = loss * 2
     //   makeNewDeal(amount)
