@@ -283,6 +283,11 @@ myBot.run(
     // condition 3: no active deal or negative profit
     function (context) {
 
+    },
+    // condition 4: check & adjust deal settings
+    // (return rate, duration bet, timeframe)
+    function (context) {
+
     }
   ],
   function (context) {
