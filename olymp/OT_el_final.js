@@ -247,8 +247,8 @@ myBot.run(
     // condition 0: repeat continuously
     function (context) {
       Market.update();
-      context.profit = Account.profit();
-      context.isProfitPositive = Account.profit() >= 0;
+      // context.profit = Account.profit();
+      // context.isProfitPositive = Account.profit() >= 0;
       // console.log('context.profit', context.profit);
       // console.log('context.isProfitPositive', context.isProfitPositive);
       return true;
@@ -259,11 +259,25 @@ myBot.run(
       second = time.getSeconds(),
       ms = time.getMilliseconds(),
       isLeftZero = second === 59 && ms > 900,
-      isRightZero = second === 0 && ms < 100;
+      isRightZero = second === 0 && ms < 100,
+      matchTime = isLeftZero || isRightZero;
 
-      return isLeftZero || isRightZero;
+      context.matchTime = matchTime;
+
+      return matchTime;
     },
-    // condition 2: match pattern
+    // condition 2: no active deal or negative profit
+    function (context) {
+      // TODO stack profit
+      const dealActive = Market.data('dealActive');
+      const isNoActiveDeal = dealActive.id ? false : true;
+      const profit = dealActive.profit || 0;
+      context.profit = profit;
+      context.isProfitPositive = profit >= 0;
+      context.isNoActiveDeal = isNoActiveDeal;
+      return isNoActiveDeal || !context.isProfitPositive;
+    },
+    // condition 3: match pattern
     function (context) {
       const candles = Market.data('candles');
 
@@ -278,26 +292,30 @@ myBot.run(
       if (!context.isProfitPositive) return true;
 
       const pattern = candles.join('');
-      return /.*updown$/.test(pattern) || /.*downup$/.test(pattern);
-    },
-    // condition 3: no active deal or negative profit
-    function (context) {
-
+      const matchPattern = /.*updown$/.test(pattern) || /.*downup$/.test(pattern);
+      context.matchPattern = matchPattern;
+      return matchPattern;
     },
     // condition 4: check & adjust deal settings
     // (return rate, duration bet, timeframe)
     function (context) {
-
+      if (context.matchTime) {
+        console.log('Time:', context.matchTime,
+        ' | Pattern:', context.matchPattern,
+        ' | No deal:', context.isNoActiveDeal,
+        ' | Profit+:', context.isProfitPositive);
+      }
+      return true;
     }
   ],
   function (context) {
     if (context.isProfitPositive) {
       context.dealAmount = 1;
-      Account.reset();
+      // Account.reset();
       console.log('WIN - Profit:', context.profit);
     }
     else {
-      context.dealAmount *= 2;
+      context.dealAmount *= 2; // TODO
       console.log('LOSE - Profit:', context.profit);
     }
 
