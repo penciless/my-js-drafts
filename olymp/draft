@@ -21,3 +21,56 @@ if (allTrue([]) && !once) {
 else (allFalse()) {
 	once = false;
 }
+
+,
+    // condition 3: no currently active deal
+    // condition 4: last trade win (profit > 0) lastActiveDealId
+    function (context) {
+      const lastActiveDealId = Market.data('lastActiveDealId');
+      if (!lastActiveDealId) {
+        context.lastTimeWin = true;
+      }
+      const candles = Market.data('candles'),
+      dealActive = Market.data('dealActive'),
+      dealHistory = Market.data('dealHistory'),
+      examDeal = dealActive.id ===;
+      return pattern === 'updown' || pattern === 'downup';
+    }
+
+  function (context) {
+    console.log('##############################');
+    // console.log("context", context);
+    const data = Market.data();
+    const direction = data.candles.pop();
+    if (direction === 'up') {
+      Trade.dealUp();
+      console.log('Trade UP!');
+    }
+    else if (direction === 'down') {
+      Trade.dealDown();
+      console.log('Trade DOWN!');
+    }
+    else console.log('Cannot decide direction!');
+    console.log('Time:', Date.now());
+    localStorage.setItem('Bot_Last_Time', Date.now());
+    console.log('Market:', data);
+    setTimeout(function() {
+      document.querySelector('button.btn-to-right').click();
+    }, 1000);
+    // document.querySelector('button.btn-to-right').click();
+    // if last trade not win:
+    //   amount = loss * 2
+    //   makeNewDeal(amount)
+    // else if last trade win:
+    //   do nothing, wait for the next pattern matching
+  }
+
+
+      const candles = Market.candles(10);
+      for (var i = candles.length - 1; i >= 0; i--) {
+        const candle = candles[i];
+        if (candle === 'up' || candle === 'down') {
+          context.direction = candle;
+          break;
+        }
+      }

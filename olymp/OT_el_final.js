@@ -1,20 +1,23 @@
 function Account() {
   var _initBalance = 0;
+  const $CURRENT_BALANCE = document.querySelector('.lay-balance-amount__digits');
 
-  this.reset = function () {
-    _initBalance = this.balance();
+  const balance = Account.balance = function () {
+    const
+    floatNumberString = $CURRENT_BALANCE.innerHTML.split(' ').join(''),
+    balance = parseFloat(floatNumberString);
+    return balance || 0;
   };
 
-  this.balance = function () {
-    // TODO logic to get current balance
-    return 0;
+  const profit = Account.profit = function () {
+    return parseFloat((balance() - _initBalance).toFixed(3));
   };
 
-  this.profit = function () {
-    return this.balance() - _initBalance;
+  const reset = Account.reset = function () {
+    _initBalance = balance();
   };
 
-  _initBalance = this.balance();
+  _initBalance = balance();
 }
 
 // #########
@@ -140,13 +143,17 @@ function Market(initConfig) {
     };
   });
 
+  const $RIGHT_CHART_BUTTON = document.querySelector('button.btn-to-right');
   const update = (Market.update = function () {
+    if ($RIGHT_CHART_BUTTON.style.visibility !== 'hidden') {
+      $RIGHT_CHART_BUTTON.click();
+    }
     const activeDeal = dealActive();
     data.candles = candles(config.candles);
     data.dealActive = activeDeal;
-    data.lastDealActiveId = activeDeal.id
+    data.lastActiveDealId = activeDeal.id
       ? activeDeal.id
-      : data.lastDealActiveId;
+      : data.lastActiveDealId;
     data.dealHistory = dealHistory();
   });
 
@@ -229,54 +236,78 @@ function Bot(initialization) {
 
 /// ####
 
-var abc = new Bot(function (context) {
-  context.market = new Market({ candles: 4 });
-  context.trade = new Trade();
-  context.account = new Account();
-  localStorage.setItem('Bot_Init_Time', Date.now());
-  // Market.data();
+var myBot = new Bot(function (context) {
+  new Trade();
+  new Account();
+  new Market({ candles: 7 });
 });
 
-abc.run(
+myBot.run(
   [
     // condition 0: repeat continuously
     function (context) {
       Market.update();
+      context.profit = Account.profit();
+      context.isProfitPositive = Account.profit() >= 0;
+      // console.log('context.profit', context.profit);
+      // console.log('context.isProfitPositive', context.isProfitPositive);
       return true;
     },
     // condition 1: nearly second 0 moment
     function (context) {
-      return new Date().getSeconds() === 0;
-    }
+      const time = new Date(),
+      second = time.getSeconds(),
+      ms = time.getMilliseconds(),
+      isLeftZero = second === 59 && ms > 900,
+      isRightZero = second === 0 && ms < 100;
+
+      return isLeftZero || isRightZero;
+    },
     // condition 2: match pattern
-    // condition 3: no currently active deal
-    // condition 4: last trade win (profit > 0)
+    function (context) {
+      const candles = Market.data('candles');
+
+      for (var i = candles.length - 1; i >= 0; i--) {
+        const direction = candles[i];
+        if (direction !== 'standoff') {
+          context.direction = direction;
+          break;
+        }
+      }
+
+      if (!context.isProfitPositive) return true;
+
+      const pattern = candles.join('');
+      return /.*updown$/.test(pattern) || /.*downup$/.test(pattern);
+    },
+    // condition 3: no active deal or negative profit
+    function (context) {
+
+    }
   ],
   function (context) {
+    if (context.isProfitPositive) {
+      context.dealAmount = 1;
+      Account.reset();
+      console.log('WIN - Profit:', context.profit);
+    }
+    else {
+      context.dealAmount *= 2;
+      console.log('LOSE - Profit:', context.profit);
+    }
+
     console.log('##############################');
-    // console.log("context", context);
-    const data = Market.data();
-    const direction = data.candles.pop();
-    if (direction === 'up') {
-      Trade.dealUp();
+    if (context.direction === 'up') {
+      Trade.dealUp(context.dealAmount);
       console.log('Trade UP!');
     }
-    else if (direction === 'down') {
-      Trade.dealDown();
+    else if (context.direction === 'down') {
+      Trade.dealDown(context.dealAmount);
       console.log('Trade DOWN!');
     }
     else console.log('Cannot decide direction!');
+
     console.log('Time:', Date.now());
-    localStorage.setItem('Bot_Last_Time', Date.now());
-    console.log('Market:', data);
-    setTimeout(function() {
-      document.querySelector('button.btn-to-right').click();
-    }, 1000);
-    // document.querySelector('button.btn-to-right').click();
-    // if last trade not win:
-    //   amount = loss * 2
-    //   makeNewDeal(amount)
-    // else if last trade win:
-    //   do nothing, wait for the next pattern matching
+    console.log('Market:', Market.data());
   }
 );
