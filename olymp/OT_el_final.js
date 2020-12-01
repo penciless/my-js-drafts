@@ -1,21 +1,22 @@
 function Account() {
   var _initBalance = 0;
-  const $CURRENT_BALANCE = document.querySelector('.lay-balance-amount__digits');
+  const $CURRENT_BALANCE = document.querySelector(
+    ".lay-balance-amount__digits"
+  );
 
-  const balance = Account.balance = function () {
-    const
-    floatNumberString = $CURRENT_BALANCE.innerHTML.split(' ').join(''),
-    balance = parseFloat(floatNumberString);
+  const balance = (Account.balance = function () {
+    const floatNumberString = $CURRENT_BALANCE.innerHTML.split(" ").join(""),
+      balance = parseFloat(floatNumberString);
     return balance || 0;
-  };
+  });
 
-  const profit = Account.profit = function () {
+  const profit = (Account.profit = function () {
     return parseFloat((balance() - _initBalance).toFixed(3));
-  };
+  });
 
-  const reset = Account.reset = function () {
+  const reset = (Account.reset = function () {
     _initBalance = balance();
-  };
+  });
 
   _initBalance = balance();
 }
@@ -143,9 +144,9 @@ function Market(initConfig) {
     };
   });
 
-  const $RIGHT_CHART_BUTTON = document.querySelector('button.btn-to-right');
+  const $RIGHT_CHART_BUTTON = document.querySelector("button.btn-to-right");
   const update = (Market.update = function () {
-    if ($RIGHT_CHART_BUTTON.style.visibility !== 'hidden') {
+    if ($RIGHT_CHART_BUTTON.style.visibility !== "hidden") {
       $RIGHT_CHART_BUTTON.click();
     }
     const activeDeal = dealActive();
@@ -204,8 +205,9 @@ function Bot(initialization) {
   this.run = function (tradeConditions, tradeFunction) {
     _conditions = tradeConditions || [];
     _tradeFunc =
-        tradeFunction && tradeFunction.constructor === Function
-        ? tradeFunction : function func() {};
+      tradeFunction && tradeFunction.constructor === Function
+        ? tradeFunction
+        : function func() {};
     _this.resume();
   };
 
@@ -214,8 +216,7 @@ function Bot(initialization) {
     _intervalID = setInterval(function () {
       try {
         if (_conditionFunc()) _tradeFunc(_context);
-      }
-      catch (error) {
+      } catch (error) {
         console.log("Bot runs into error! Force stop!");
         _this.forceStop();
         throw error;
@@ -256,11 +257,11 @@ myBot.run(
     // condition 1: nearly second 0 moment
     function (context) {
       const time = new Date(),
-      second = time.getSeconds(),
-      ms = time.getMilliseconds(),
-      isLeftZero = second === 59 && ms > 900,
-      isRightZero = second === 0 && ms < 100,
-      matchTime = isLeftZero || isRightZero;
+        second = time.getSeconds(),
+        ms = time.getMilliseconds(),
+        isLeftZero = second === 59 && ms > 900,
+        isRightZero = second === 0 && ms < 100,
+        matchTime = isLeftZero || isRightZero;
 
       context.matchTime = matchTime;
 
@@ -269,21 +270,24 @@ myBot.run(
     // condition 2: no active deal or negative profit
     function (context) {
       // TODO stack profit
-      const dealActive = Market.data('dealActive');
+      context.totalLoss = context.totalLoss || 0;
+      const dealActive = Market.data("dealActive");
       const isNoActiveDeal = dealActive.id ? false : true;
       const profit = dealActive.profit || 0;
       context.profit = profit;
       context.isProfitPositive = profit >= 0;
       context.isNoActiveDeal = isNoActiveDeal;
+      if (!context.isProfitPositive) context.totalLoss += profit;
+      if (isNoActiveDeal && context.totalLoss >= 0) context.totalLoss = 0;
       return isNoActiveDeal || !context.isProfitPositive;
     },
     // condition 3: match pattern
     function (context) {
-      const candles = Market.data('candles');
+      const candles = Market.data("candles");
 
       for (var i = candles.length - 1; i >= 0; i--) {
         const direction = candles[i];
-        if (direction !== 'standoff') {
+        if (direction !== "standoff") {
           context.direction = direction;
           break;
         }
@@ -291,19 +295,31 @@ myBot.run(
 
       if (!context.isProfitPositive) return true;
 
-      const pattern = candles.join('');
-      const matchPattern = /.*updown$/.test(pattern) || /.*downup$/.test(pattern);
+      const pattern = candles.join("");
+      const matchPattern =
+        /.*updown$/.test(pattern) || /.*downup$/.test(pattern);
       context.matchPattern = matchPattern;
       return matchPattern;
     },
     // condition 4: check & adjust deal settings
     // (return rate, duration bet, timeframe)
     function (context) {
+      const percentReturnRateString = document.querySelector(
+        "span.asset-item-badge span"
+      ).innerText;
+      context.percentReturnRate = parseInt(percentReturnRateString, 10);
+      if (context.percentReturnRate < 80) return false;
       if (context.matchTime) {
-        console.log('Time:', context.matchTime,
-        ' | Pattern:', context.matchPattern,
-        ' | No deal:', context.isNoActiveDeal,
-        ' | Profit+:', context.isProfitPositive);
+        console.log(
+          "Time:",
+          context.matchTime,
+          " | Pattern:",
+          context.matchPattern,
+          " | No deal:",
+          context.isNoActiveDeal,
+          " | Profit+:",
+          context.isProfitPositive
+        );
       }
       return true;
     }
@@ -312,25 +328,60 @@ myBot.run(
     if (context.isProfitPositive) {
       context.dealAmount = 1;
       // Account.reset();
-      console.log('WIN - Profit:', context.profit);
-    }
-    else {
-      context.dealAmount *= 2; // TODO
-      console.log('LOSE - Profit:', context.profit);
+      console.log("WIN - Profit:", context.profit);
+    } else {
+      context.dealAmount =
+        (context.totalLoss / context.percentReturnRate) * 100 + 1;
+      context.dealAmount = context.dealAmount || 1;
+      console.log("LOSE - Profit:", context.profit);
     }
 
-    console.log('##############################');
-    if (context.direction === 'up') {
+    console.log("##############################");
+    if (context.direction === "up") {
       Trade.dealUp(context.dealAmount);
-      console.log('Trade UP!');
-    }
-    else if (context.direction === 'down') {
+      console.log("Trade UP!");
+    } else if (context.direction === "down") {
       Trade.dealDown(context.dealAmount);
-      console.log('Trade DOWN!');
-    }
-    else console.log('Cannot decide direction!');
+      console.log("Trade DOWN!");
+    } else console.log("Cannot decide direction!");
 
-    console.log('Time:', Date.now());
-    console.log('Market:', Market.data());
+    console.log("Time:", Date.now());
+    console.log("Market:", Market.data());
+    console.log("Context:", context);
   }
 );
+
+// #########
+
+var dataBinh = [];
+var lastReturnRate = 0;
+const $RIGHT_CHART_BUTTON = document.querySelector("button.btn-to-right");
+
+function checkReturnRate() {
+  const percentReturnRateString = document.querySelector(
+    "span.asset-item-badge span"
+  ).innerText;
+  const assetPairName = document.querySelector(".asset-button__title")
+    .innerText;
+  const percentReturnRate = parseInt(percentReturnRateString, 10);
+
+  if (lastReturnRate !== percentReturnRate) {
+    dataBinh.push(
+      assetPairName +
+        ": " +
+        percentReturnRate +
+        " @ " +
+        new Date().toLocaleString()
+    );
+    lastReturnRate = percentReturnRate;
+    localStorage.setItem("binhData", dataBinh);
+  }
+
+  if ($RIGHT_CHART_BUTTON.style.visibility !== "hidden") {
+    $RIGHT_CHART_BUTTON.click();
+  }
+}
+
+setInterval(function () {
+  checkReturnRate();
+}, 1000);
